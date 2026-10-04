@@ -1,0 +1,20 @@
+{
+"type": "FeatureCollection",
+"name": "museum",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{"type":"Feature","properties":{"id":null,"Name":"Colombo National Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.860913,6.9099984,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"National Museum of Natural History","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8613153,6.9111752,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Dutch Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.851639,6.9359623,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Dehiwala Zoo Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8725182,6.8570032,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Sri Lanka Air Force Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8917824,6.8238621,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Colombo Wax Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8687504,6.9025663,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Sri Lanka Planetarium","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8628874,6.9007094,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"The Central Point - Economic History Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8433672,6.934471,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Archaeology National Museum Kotte","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.9050836,6.8932482,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Independence Memorial Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.8676062,6.9041085,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Thewatta Church Museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[79.9359324,7.0337164,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Colombo national museum","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[80.0402044,6.5420371,0.0]}},
+{"type":"Feature","properties":{"id":null,"Name":"Seethawaka Museum ?????? ??????????","descriptio":null,"timestamp":null,"begin":null,"end":null,"altitudeMo":null,"tessellate":-1,"extrude":0,"visibility":-1,"drawOrder":null,"icon":null},"geometry":{"type":"Point","coordinates":[80.2066468,6.9554429,0.0]}}
+]
+}
