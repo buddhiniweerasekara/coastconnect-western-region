@@ -1,0 +1,508 @@
+/*
+FILE PURPOSE: All visual styling for CoastConnect (a single stylesheet,
+  no CSS framework, so it is easy to read and explain in a viva).
+WHAT THIS FILE DOES:
+  - Professional GIS dashboard layout: top bar, left icon nav, a side
+    panel with five tabs, a central map, floating action buttons.
+  - Marker, popup, legend, chip, card, dialog and toast styling.
+  - The reusable form modal shell, and the dynamic Add/Edit Place form,
+    Give Feedback form and Report an Issue form that are all injected
+    into that one shell at runtime (js/place-form.js, js/feedback.js,
+    js/participation.js).
+  - Community status badges ("Community Added" / "Community Updated").
+  - Responsive rules: the side panel becomes a bottom drawer, and the
+    form modal becomes a bottom sheet, on phones.
+MAIN SECTIONS: see the comment headers below.
+--------------------------------------------------------------------------
+*/
+
+:root {
+  --cc-primary: #0f4c5c;
+  --cc-primary-light: #0e7490;
+  --cc-accent: #0284c7;
+  --cc-warning: #d97706;
+  --cc-danger: #dc2626;
+  --cc-success: #16a34a;
+  --cc-bg: #f4f6f8;
+  --cc-panel-bg: #ffffff;
+  --cc-border: #e2e8f0;
+  --cc-text: #1f2937;
+  --cc-text-muted: #6b7280;
+  --cc-radius: 10px;
+  --cc-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+/* ==============================
+   Z-INDEX SCALE (UI/UX fix)
+   ==============================
+   WHY THIS EXISTS: Leaflet's own stylesheet gives its internal elements
+   z-index values up to 1000 (.leaflet-top/.leaflet-bottom, the corners
+   that hold the zoom control, layers control, scale bar, etc.), and
+   none of this page's ancestors around #map create a separate CSS
+   stacking context (position:relative alone does not - only
+   position + z-index, or transform/opacity<1/filter/isolation, do).
+   That means Leaflet's own 1000-scale was directly competing against
+   this file's old 200/250/300 values for the dialog/modal/toast, and
+   Leaflet was winning - so controls, markers and popups could render
+   ON TOP of an open Add Place / Edit Place form.
+   FIX: every element in this file that needs to visually sit ABOVE and
+   cover the ENTIRE map (including its controls) gets a z-index safely
+   above Leaflet's own maximum (1000), using one consistent scale instead
+   of scattered arbitrary numbers:
+     2000  cc-dialog-overlay   (the "confirm this location?" dialog)
+     2100  cc-modal-overlay    (the shared Add/Edit/Report/Feedback modal)
+     2200  cc-toast-container  (success/warning/error toasts - always on
+                                 top, even while a modal is open, since a
+                                 submission error toast must stay visible)
+   Ordinary app CHROME that sits beside the map, not above a dialog that
+   covers it, never needed to beat Leaflet's scale and is unchanged. */
+
+* { box-sizing: border-box; }
+/* The browser's own [hidden] rule can be overridden by a later, equally
+   specific class rule (e.g. ".cc-dialog-overlay{display:flex}") because
+   author styles always beat the user-agent stylesheet. This rule makes
+   sure the "hidden" attribute always wins, everywhere in this file. */
+[hidden] { display: none !important; }
+/* Accessibility: a visible keyboard-focus ring everywhere. Mouse/touch
+   users see nothing extra (focus-visible only fires for keyboard focus) -
+   this is purely for people tabbing through forms, buttons and links. */
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--cc-accent); outline-offset: 2px;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--cc-text);
+  background: var(--cc-bg);
+  display: flex;
+  flex-direction: column;
+}
+h2, h3, h4, h5 { margin: 0 0 8px; color: var(--cc-primary); }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 0.95rem; margin-top: 20px; }
+p { line-height: 1.5; }
+
+/* ===================== TOP BAR ===================== */
+.cc-topbar {
+  height: 56px;
+  background: var(--cc-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.cc-topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; }
+.cc-topbar-brand div { display: flex; flex-direction: column; line-height: 1.1; }
+.cc-topbar-brand strong { font-size: 1rem; }
+.cc-topbar-brand span { font-size: 0.7rem; opacity: 0.85; }
+.cc-topbar-btn {
+  background: rgba(255,255,255,0.12);
+  border: none; color: #fff; padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;
+}
+.cc-topbar-btn:hover { background: rgba(255,255,255,0.22); }
+
+/* ===================== LAYOUT ===================== */
+.cc-layout { flex: 1; display: flex; min-height: 0; }
+
+.cc-nav {
+  width: 76px;
+  background: #ffffff;
+  border-right: 1px solid var(--cc-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 14px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.cc-nav-btn {
+  width: 64px; padding: 10px 4px; border: none; background: transparent;
+  color: var(--cc-text-muted); border-radius: 10px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 0.68rem;
+}
+.cc-nav-btn i { font-size: 1.1rem; }
+.cc-nav-btn:hover { background: #f1f5f9; }
+.cc-nav-btn-active { background: #e0f2fe; color: var(--cc-primary); font-weight: 600; }
+
+.cc-side-panel {
+  width: 360px;
+  background: var(--cc-panel-bg);
+  border-right: 1px solid var(--cc-border);
+  overflow-y: auto;
+  padding: 16px 18px 40px;
+  flex-shrink: 0;
+  position: relative;
+}
+.cc-panel-close { display: none; position: absolute; top: 10px; right: 10px; border: none; background: none; font-size: 1.1rem; color: var(--cc-text-muted); cursor: pointer; }
+
+.cc-map-wrap { flex: 1; position: relative; min-width: 0; }
+#map { width: 100%; height: 100%; background: #bcd7e0; }
+
+/* ===================== EXPLORE PANEL ===================== */
+.cc-search-wrap { position: relative; display: flex; align-items: center; gap: 8px; border: 1px solid var(--cc-border); border-radius: 8px; padding: 8px 10px; }
+.cc-search-wrap i { color: var(--cc-text-muted); }
+.cc-search-wrap input { border: none; outline: none; flex: 1; font-size: 0.9rem; }
+.cc-search-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff;
+  border: 1px solid var(--cc-border); border-radius: 8px; box-shadow: var(--cc-shadow);
+  max-height: 260px; overflow-y: auto; z-index: 20;
+}
+.cc-search-result {
+  width: 100%; text-align: left; border: none; background: none; padding: 8px 12px;
+  display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;
+}
+.cc-search-result:hover { background: #f1f5f9; }
+.cc-search-result small { margin-left: auto; color: var(--cc-text-muted); }
+
+.cc-quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cc-quick-btn {
+  border: 1px solid var(--cc-border); background: #fff; border-radius: 8px; padding: 10px 8px;
+  font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--cc-text);
+}
+.cc-quick-btn:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+
+.cc-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cc-chip {
+  border: 1px solid var(--cc-border); background: #fff; border-radius: 999px; padding: 6px 12px;
+  font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+}
+.cc-chip-active { background: var(--cc-primary); border-color: var(--cc-primary); color: #fff; }
+.cc-filter-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.cc-text-btn { border: none; background: none; color: var(--cc-accent); font-size: 0.8rem; cursor: pointer; padding: 4px 0; }
+.cc-visible-count { font-size: 0.75rem; color: var(--cc-text-muted); margin-left: auto; }
+
+.cc-cards { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+.cc-card { display: flex; align-items: center; gap: 10px; border: 1px solid var(--cc-border); border-radius: 8px; padding: 8px 10px; }
+.cc-card i.fa-solid:first-child { color: var(--cc-primary-light); width: 18px; text-align: center; }
+.cc-card-body { flex: 1; font-size: 0.82rem; }
+.cc-card-actions { display: flex; gap: 4px; }
+.cc-card-btn { border: none; background: #f1f5f9; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; color: var(--cc-text-muted); }
+.cc-card-fav-active { color: #f59e0b; }
+.cc-empty-note { color: var(--cc-text-muted); font-size: 0.8rem; font-style: italic; }
+
+.cc-fav-list { display: flex; flex-direction: column; gap: 6px; }
+.cc-fav-row { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--cc-border); border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; }
+.cc-fav-row span:first-child { cursor: pointer; }
+.cc-fav-remove { border: none; background: none; color: var(--cc-text-muted); cursor: pointer; }
+
+/* ===================== LAYERS PANEL ===================== */
+.cc-basemap-switcher { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.cc-basemap-row { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.cc-layer-group { margin-bottom: 14px; }
+.cc-layer-row { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; padding: 4px 0; }
+.cc-layer-swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* ===================== COMMUNITY PANEL ===================== */
+.cc-intro-text { font-size: 0.85rem; color: var(--cc-text-muted); }
+.cc-big-actions { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.cc-big-btn {
+  background: var(--cc-primary); color: #fff; border: none; border-radius: 8px;
+  padding: 12px 14px; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+}
+.cc-big-btn:hover { background: var(--cc-primary-light); }
+.cc-big-btn-warning { background: var(--cc-warning); }
+.cc-big-btn-warning:hover { background: #b45309; }
+.cc-community-summary { font-size: 0.82rem; color: var(--cc-text-muted); }
+.cc-export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cc-small-note { font-size: 0.75rem; color: var(--cc-text-muted); }
+
+/* ===================== PLANNING PANEL ===================== */
+.cc-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cc-stat-tile { background: #f8fafc; border: 1px solid var(--cc-border); border-radius: 8px; padding: 10px; text-align: center; }
+.cc-stat-tile span { display: block; font-size: 1.4rem; font-weight: 700; color: var(--cc-primary); }
+.cc-stat-tile label { font-size: 0.7rem; color: var(--cc-text-muted); }
+.cc-stat-tile-warning span { color: var(--cc-danger); }
+.cc-chart-box { background: #fff; border: 1px solid var(--cc-border); border-radius: 8px; padding: 10px; margin-bottom: 14px; }
+.cc-priority-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.cc-priority-row { border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; border-left: 4px solid; }
+.cc-priority-lower { border-color: var(--cc-success); background: #f0fdf4; }
+.cc-priority-moderate { border-color: var(--cc-warning); background: #fffbeb; }
+.cc-priority-higher { border-color: var(--cc-danger); background: #fef2f2; }
+#serviceGapInsights p { font-size: 0.82rem; margin: 6px 0; }
+
+/* ===================== ABOUT PANEL ===================== */
+#panel-about ol { padding-left: 18px; font-size: 0.85rem; }
+#panel-about p { font-size: 0.85rem; }
+
+/* ===================== MAP OVERLAYS ===================== */
+.cc-picking-banner {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  background: var(--cc-primary); color: #fff; padding: 10px 18px; border-radius: 999px;
+  display: flex; align-items: center; gap: 8px; font-size: 0.85rem; box-shadow: var(--cc-shadow); z-index: 40;
+}
+
+.cc-legend-panel {
+  position: absolute; bottom: 16px; left: 16px; background: #fff; border-radius: var(--cc-radius);
+  box-shadow: var(--cc-shadow); padding: 12px 14px; width: 230px; max-height: 50%; overflow-y: auto; z-index: 30;
+}
+.cc-legend-collapsed .cc-legend-body-wrap,
+.cc-legend-collapsed #legendBody { display: none; }
+.cc-legend-section { margin-bottom: 10px; }
+.cc-legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; padding: 2px 0; }
+.cc-legend-note { font-size: 0.7rem; color: var(--cc-text-muted); margin-top: 6px; }
+.cc-legend-note-strong { font-weight: 600; color: var(--cc-text); }
+
+.cc-fab-row { position: absolute; right: 18px; bottom: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 30; }
+.cc-fab {
+  width: 54px; height: 54px; border-radius: 50%; border: none; cursor: pointer;
+  box-shadow: var(--cc-shadow); font-size: 1.15rem; background: #fff; color: var(--cc-primary);
+}
+.cc-fab-primary { background: var(--cc-primary); color: #fff; width: 60px; height: 60px; font-size: 1.3rem; }
+.cc-fab-warning { color: var(--cc-warning); }
+
+.cc-fatal-error { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--cc-danger); gap: 10px; padding: 20px; text-align: center; }
+
+/* ===================== MARKERS ===================== */
+.coastconnect-marker-dot {
+  width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.coastconnect-marker-dot i { transform: rotate(45deg); font-size: 0.8rem; }
+.coastconnect-marker-community-dot { border: 2px solid #fff; }
+
+.coastconnect-issue-dot {
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--cc-danger); color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.coastconnect-severity-low .coastconnect-issue-dot { background: #facc15; color: #78350f; }
+.coastconnect-severity-moderate .coastconnect-issue-dot { background: #fb923c; }
+.coastconnect-severity-high .coastconnect-issue-dot { background: #ef4444; }
+.coastconnect-severity-critical .coastconnect-issue-dot { background: #991b1b; }
+.coastconnect-issue-strong { border: 3px solid #450a0a; }
+
+.coastconnect-pick-marker i { font-size: 1.6rem; color: var(--cc-danger); }
+.coastconnect-picking-cursor { cursor: crosshair !important; }
+
+/* Subtle name tooltip for named roads only (see js/layers.js
+   buildRoadLayer) - dark, small, no arrow, so it never visually
+   clutters the regional view (js/layers.js only binds these on named
+   features, not every road, and the basemap already carries its own
+   road labels - this is a lightweight supplement, not a replacement). */
+.cc-road-tooltip {
+  background: rgba(31,41,55,0.85); border: none; color: #fff;
+  font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; box-shadow: none;
+}
+.cc-road-tooltip::before { display: none; } /* remove the default tooltip arrow - cleaner over a thin line */
+
+.coastconnect-pulse {
+  display: block; width: 100%; height: 100%; border-radius: 50%; background: rgba(2,132,199,0.35);
+  border: 3px solid var(--cc-accent); animation: cc-pulse 1.4s infinite;
+}
+.coastconnect-pulse-blue { background: rgba(37,99,235,0.35); border-color: #2563eb; }
+@keyframes cc-pulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+/* ===================== POPUPS ===================== */
+.cc-popup { font-size: 0.82rem; max-width: 260px; max-height: 320px; overflow-y: auto; padding-right: 2px; }
+.cc-popup-source { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; margin-bottom: 4px; }
+.cc-source-existing { color: var(--cc-primary); }
+.cc-source-community { color: #7c3aed; }
+.cc-source-issue { color: var(--cc-danger); }
+.cc-popup-title { margin: 0 0 2px; font-size: 1rem; color: var(--cc-text); }
+.cc-popup-category { color: var(--cc-text-muted); font-size: 0.75rem; margin-bottom: 6px; }
+.cc-popup-desc { margin: 6px 0; }
+.cc-popup-fields { margin: 8px 0; }
+.cc-popup-fields dt { font-weight: 600; font-size: 0.72rem; color: var(--cc-text-muted); margin-top: 6px; }
+.cc-popup-fields dd { margin: 0; font-size: 0.8rem; }
+.cc-popup-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.cc-popup-btn {
+  border: 1px solid var(--cc-border); background: #f8fafc; border-radius: 6px; padding: 6px 8px;
+  font-size: 0.76rem; cursor: pointer; text-align: left;
+}
+.cc-popup-btn:hover { background: #e0f2fe; }
+.cc-popup-photo { width: 100%; border-radius: 6px; margin-top: 8px; }
+.cc-popup-video-link { display: inline-block; margin-top: 8px; color: var(--cc-accent); font-size: 0.78rem; }
+.cc-popup-date { font-size: 0.7rem; color: var(--cc-text-muted); margin-top: 6px; }
+.cc-popup-disclaimer { font-size: 0.68rem; color: var(--cc-text-muted); font-style: italic; margin-top: 8px; }
+.cc-popup-severity { font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; }
+.cc-severity-low { color: #92650a; }
+.cc-severity-moderate { color: #c2410c; }
+.cc-severity-high { color: #dc2626; }
+.cc-severity-critical { color: #7f1d1d; }
+
+/* ===================== DIALOG ===================== */
+.cc-dialog-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: flex;
+  align-items: center; justify-content: center; z-index: 2000; /* see Z-INDEX SCALE */
+}
+.cc-dialog { background: #fff; border-radius: var(--cc-radius); padding: 20px; width: 300px; box-shadow: var(--cc-shadow); }
+.cc-dialog-coords { font-size: 0.8rem; color: var(--cc-text-muted); margin: 8px 0 16px; }
+.cc-dialog-actions { display: flex; flex-direction: column; gap: 8px; }
+
+/* ===================== FORM MODAL ===================== */
+/* The ONE reusable shell for Add Place / Edit Information / Give
+   Feedback / Report an Issue. js/place-form.js, js/feedback.js and
+   js/participation.js only ever fill #appModalBody - this file does not
+   know or care which form is currently inside it. */
+.cc-modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex;
+  align-items: flex-start; justify-content: center; z-index: 2100; /* see Z-INDEX SCALE */
+  padding: 36px 16px; overflow-y: auto;
+}
+.cc-modal {
+  background: #fff; border-radius: var(--cc-radius); box-shadow: var(--cc-shadow);
+  width: 480px; max-width: 100%; max-height: calc(100vh - 72px);
+  display: flex; flex-direction: column;
+}
+.cc-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--cc-border); flex-shrink: 0;
+}
+.cc-modal-header h3 { margin: 0; font-size: 1rem; }
+.cc-modal-close {
+  border: none; background: #f1f5f9; color: var(--cc-text-muted); width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; flex-shrink: 0;
+}
+.cc-modal-close:hover { background: #e2e8f0; color: var(--cc-text); }
+.cc-modal-body { padding: 18px; overflow-y: auto; }
+
+/* ===================== DYNAMIC ADD/EDIT PLACE FORM ===================== */
+/* Built at runtime by js/place-form.js from APP_CONFIG.editableCategories.
+   Class names here are the contract that place-form.js's generated HTML
+   must follow - see the "MARKUP CONVENTIONS" comment at the top of
+   js/place-form.js in Part 3. */
+
+/* Step 1: category picker grid (Add Place only - Edit Information skips
+   straight to the form because the category is already known). */
+.cc-category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cc-category-btn {
+  border: 1px solid var(--cc-border); background: #fff; border-radius: 8px; padding: 12px 8px;
+  font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; color: var(--cc-text);
+}
+.cc-category-btn i { font-size: 1.2rem; color: var(--cc-primary-light); }
+.cc-category-btn:hover { border-color: var(--cc-accent); background: #f0f9ff; }
+
+/* Step 2+: the actual form, in sections (Location / Basic Information /
+   Category Details / Photo / Submit), per the assignment's suggested
+   layout. */
+.cc-place-form { display: flex; flex-direction: column; gap: 4px; }
+.cc-form-section { border-top: 1px solid var(--cc-border); padding-top: 14px; margin-top: 14px; }
+.cc-form-section:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+.cc-form-section-title {
+  margin: 0 0 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--cc-text-muted);
+}
+
+.cc-field-group { margin-bottom: 12px; }
+.cc-field-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+.cc-required { color: var(--cc-danger); margin-left: 2px; }
+.cc-field-input {
+  width: 100%; border: 1px solid var(--cc-border); border-radius: 6px; padding: 8px 10px;
+  font-size: 0.85rem; font-family: inherit; background: #fff; color: var(--cc-text);
+}
+.cc-field-input:focus { outline: none; border-color: var(--cc-accent); box-shadow: 0 0 0 3px rgba(2,132,199,0.15); }
+.cc-field-textarea { resize: vertical; min-height: 70px; }
+.cc-field-hint { font-size: 0.7rem; color: var(--cc-text-muted); margin-top: 3px; }
+.cc-field-error { font-size: 0.72rem; color: var(--cc-danger); margin-top: 3px; }
+.cc-field-input-invalid { border-color: var(--cc-danger); }
+
+/* Read-only coordinates captured by a map click (section: Location) */
+.cc-coord-display {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: #f8fafc; border: 1px dashed var(--cc-border); border-radius: 8px;
+  padding: 10px 12px; font-size: 0.8rem; margin-bottom: 8px;
+}
+.cc-coord-display-empty { color: var(--cc-text-muted); font-style: italic; }
+.cc-change-location-btn {
+  border: 1px solid var(--cc-border); background: #fff; border-radius: 6px; padding: 6px 10px;
+  font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--cc-primary);
+}
+.cc-change-location-btn:hover { background: #f0f9ff; border-color: var(--cc-accent); }
+
+/* Photo upload (section: Photo) */
+.cc-photo-current { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cc-photo-current img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--cc-border); }
+.cc-photo-input-wrap { display: flex; flex-direction: column; gap: 6px; }
+.cc-photo-input-label {
+  border: 1.5px dashed var(--cc-border); border-radius: 8px; padding: 16px; text-align: center;
+  cursor: pointer; color: var(--cc-text-muted); font-size: 0.8rem; display: block;
+}
+.cc-photo-input-label:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+.cc-photo-input-label input[type="file"] { display: none; }
+.cc-photo-preview-wrap { position: relative; display: inline-block; margin-top: 8px; }
+.cc-photo-preview { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--cc-border); }
+.cc-photo-remove-btn {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: var(--cc-danger); color: #fff; cursor: pointer; font-size: 0.7rem;
+}
+
+/* Possible-duplicate warning (soft, never blocks submission) */
+.cc-duplicate-warning {
+  display: flex; gap: 8px; align-items: flex-start; background: #fffbeb; border: 1px solid #fde68a;
+  color: #92400e; border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; margin-bottom: 12px;
+}
+.cc-duplicate-warning i { margin-top: 2px; }
+
+/* Submit row (section: Submit) */
+.cc-form-actions { display: flex; gap: 10px; margin-top: 16px; }
+.cc-form-cancel { flex: 0 0 auto; }
+.cc-form-submit {
+  flex: 1; background: var(--cc-primary); color: #fff; border: none; border-radius: 8px;
+  padding: 11px 14px; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+}
+.cc-form-submit:hover { background: var(--cc-primary-light); }
+.cc-form-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+.cc-spinner {
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff; animation: cc-spin 0.7s linear infinite; display: inline-block;
+}
+@keyframes cc-spin { to { transform: rotate(360deg); } }
+
+.cc-form-success { text-align: center; padding: 20px 10px; }
+.cc-form-success i { font-size: 2.2rem; color: var(--cc-success); margin-bottom: 10px; }
+
+/* ===================== COMMUNITY STATUS BADGES ===================== */
+/* Shown in popups (and the Explore cards) for any place that is not a
+   plain untouched "existing" GIS record - never implies the same level
+   of verification as existing GIS data (section AO of the brief). */
+.cc-badge {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 0.66rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 8px; border-radius: 999px;
+  margin-bottom: 6px;
+}
+.cc-badge-added { background: #ede9fe; color: #5b21b6; }
+.cc-badge-updated { background: #fef3c7; color: #92400e; }
+.cc-popup-btn-edit { color: var(--cc-primary); font-weight: 600; }
+
+/* ===================== TOASTS ===================== */
+
+.cc-toast {.cc-toast-container { position: fixed; top: 70px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 2200; } /* see Z-INDEX SCALE */
+  background: #1f2937; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.82rem;
+  opacity: 0; transform: translateY(-8px); transition: all 0.25s ease; max-width: 280px; box-shadow: var(--cc-shadow);
+}
+.cc-toast-visible { opacity: 1; transform: translateY(0); }
+.cc-toast-warning { background: #b45309; }
+.cc-toast-success { background: #15803d; }
+.cc-toast-error { background: #991b1b; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 1024px) {
+  .cc-side-panel { width: 300px; }
+}
+
+@media (max-width: 760px) {
+  .cc-nav { width: 100%; height: 56px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid var(--cc-border); order: 3; }
+  .cc-nav-btn { width: auto; flex: 1; }
+  .cc-layout { flex-direction: column; }
+  .cc-side-panel {
+    position: fixed; left: 0; right: 0; bottom: 56px; top: auto; height: 60vh; width: 100%;
+    border-right: none; border-top: 1px solid var(--cc-border); border-radius: 16px 16px 0 0;
+    transform: translateY(100%); transition: transform 0.25s ease; z-index: 100; box-shadow: var(--cc-shadow);
+  }
+  body.cc-panel-open .cc-side-panel { transform: translateY(0); }
+  .cc-panel-close { display: block; }
+  .cc-map-wrap { order: 1; height: calc(100vh - 56px - 56px); }
+  .cc-fab-row { bottom: 16px; }
+  .cc-legend-panel { width: calc(100% - 32px); }
+  .cc-modal-overlay { padding: 0; align-items: flex-end; }
+  .cc-modal { width: 100%; max-height: 92vh; border-radius: 16px 16px 0 0; }
+  .cc-category-grid { grid-template-columns: 1fr; }
+}

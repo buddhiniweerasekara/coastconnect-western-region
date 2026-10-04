@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoastConnect Western Region</title>
+
+<!--
+  FILE PURPOSE: The single HTML page for CoastConnect Western Region.
+  WHAT THIS FILE DOES: lays out the top bar, the left navigation (five
+  panels: Explore, Layers, Community, Planning Insights, About), the
+  central Leaflet map, the floating action buttons, and the small
+  dialogs/modals that js/ui.js controls:
+    - #locationConfirmDialog : "confirm this map-click location?" step,
+      used by Add Place and Report an Issue before the real form opens.
+    - #appModal              : ONE reusable form modal. Its body is
+      filled at runtime by js/place-form.js (Add/Edit Tourism Place),
+      js/feedback.js (Give Feedback) or js/participation.js (Report an
+      Issue) - there is no separate HTML markup per form, exactly as
+      required: one dynamic form shell, different content injected in.
+  DEPENDENCIES (loaded below, in this order):
+    1. Leaflet (map engine)            4. Chart.js (planning charts)
+    2. Leaflet.markercluster           5. Font Awesome (icons)
+    3. Leaflet.heat (heatmaps)         6. our own js/ files, config.js first
+
+  IMPORTANT: this project does NOT use Google Forms anywhere. Every
+  participatory action (Add Place, Edit Information, Give Feedback,
+  Report an Issue) is a form built directly on this page and submitted
+  to a Google Apps Script Web App (see js/config.js and
+  google-apps-script/Code.gs).
+-->
+
+<!-- Leaflet core -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<!-- Leaflet MarkerCluster -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<!-- Font Awesome icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Our own styles -->
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ================= TOP BAR ================= -->
+  <header class="cc-topbar">
+    <div class="cc-topbar-brand">
+      <i class="fa-solid fa-water"></i>
+      <div>
+        <strong>CoastConnect</strong>
+        <span>Western Region, Sri Lanka</span>
+      </div>
+    </div>
+    <button type="button" id="legendToggleBtn" class="cc-topbar-btn">
+      <i class="fa-solid fa-list"></i> Legend
+    </button>
+  </header>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <div class="cc-layout">
+
+    <!-- LEFT NAVIGATION (tabs) -->
+    <nav class="cc-nav" aria-label="Main navigation">
+      <button type="button" class="cc-nav-btn" data-tab="explore" aria-label="Explore">
+        <i class="fa-solid fa-compass"></i><span>Explore</span>
+      </button>
+      <button type="button" class="cc-nav-btn" data-tab="layers" aria-label="Layers">
+        <i class="fa-solid fa-layer-group"></i><span>Layers</span>
+      </button>
+      <button type="button" class="cc-nav-btn" data-tab="community" aria-label="Community">
+        <i class="fa-solid fa-users"></i><span>Community</span>
+      </button>
+      <button type="button" class="cc-nav-btn" data-tab="planning" aria-label="Planning Insights">
+        <i class="fa-solid fa-chart-column"></i><span>Planning</span>
+      </button>
+      <button type="button" class="cc-nav-btn" data-tab="about" aria-label="About">
+        <i class="fa-solid fa-circle-info"></i><span>About</span>
+      </button>
+    </nav>
+
+    <!-- SIDE PANEL (one section visible at a time, controlled by ui.js) -->
+    <aside class="cc-side-panel">
+      <button type="button" id="panelCloseBtn" class="cc-panel-close" aria-label="Close panel">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- ===== EXPLORE PANEL ===== -->
+      <section id="panel-explore" class="cc-panel-section">
+        <h2>Explore</h2>
+
+        <div class="cc-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search tourism places by name..." aria-label="Search tourism places">
+          <div id="searchResults" class="cc-search-results" hidden></div>
+        </div>
+
+        <h3>Quick Discovery</h3>
+        <div class="cc-quick-grid">
+          <button type="button" class="cc-quick-btn" data-filter="near-me"><i class="fa-solid fa-location-crosshairs"></i> Nearby Attractions</button>
+          <button type="button" class="cc-quick-btn" data-filter="beaches"><i class="fa-solid fa-umbrella-beach"></i> Beaches</button>
+          <button type="button" class="cc-quick-btn" data-filter="heritage"><i class="fa-solid fa-landmark"></i> Heritage</button>
+          <button type="button" class="cc-quick-btn" data-filter="nature"><i class="fa-solid fa-tree"></i> Nature</button>
+          <button type="button" class="cc-quick-btn" data-filter="food"><i class="fa-solid fa-utensils"></i> Food</button>
+          <button type="button" class="cc-quick-btn" data-filter="accommodation"><i class="fa-solid fa-bed"></i> Accommodation</button>
+          <button type="button" class="cc-quick-btn" data-filter="diving"><i class="fa-solid fa-person-swimming"></i> Diving</button>
+          <button type="button" class="cc-quick-btn" data-filter="viewpoints"><i class="fa-solid fa-binoculars"></i> Viewpoints</button>
+          <button type="button" class="cc-quick-btn" data-filter="transport"><i class="fa-solid fa-bus"></i> Transport</button>
+          <button type="button" class="cc-quick-btn" data-filter="museums"><i class="fa-solid fa-building-columns"></i> Museums</button>
+          <button type="button" class="cc-quick-btn" data-filter="attractions"><i class="fa-solid fa-star"></i> Other Attractions</button>
+          <button type="button" class="cc-quick-btn" data-filter="shops"><i class="fa-solid fa-bag-shopping"></i> Shops</button>
+          <button type="button" class="cc-quick-btn" data-filter="banks_atm"><i class="fa-solid fa-money-bill-wave"></i> Banks & ATMs</button>
+        </div>
+
+        <h3>Filter by Category</h3>
+        <div id="filterChips" class="cc-chip-row"></div>
+        <div class="cc-filter-actions">
+          <button type="button" id="filterShowAll" class="cc-text-btn">Show All</button>
+          <button type="button" id="filterClear" class="cc-text-btn">Clear</button>
+          <span id="visiblePlacesCount" class="cc-visible-count">0 places visible</span>
+        </div>
+
+        <h3 id="exploreCardsTitle">Places</h3>
+        <div id="exploreCards" class="cc-cards"></div>
+
+        <h3><i class="fa-solid fa-star"></i> Favourites</h3>
+        <div id="favouritesList" class="cc-fav-list"></div>
+      </section>
+
+      <!-- ===== LAYERS PANEL ===== -->
+      <section id="panel-layers" class="cc-panel-section" hidden>
+        <h2>Layers</h2>
+
+        <h3>Basemap</h3>
+        <div id="basemapSwitcher" class="cc-basemap-switcher"></div>
+
+        <h3>Map Layers</h3>
+        <div id="layersPanelBody"></div>
+      </section>
+
+      <!-- ===== COMMUNITY PANEL ===== -->
+      <section id="panel-community" class="cc-panel-section" hidden>
+        <h2>Community</h2>
+        <p class="cc-intro-text">
+          CoastConnect is a Participatory GIS: anyone can add a missing tourism place,
+          edit information about an existing or community-added place, give feedback,
+          or report a coastal/tourism problem. No account or login is required, and no
+          photo requires a Google sign-in - photos are uploaded directly from your device.
+        </p>
+
+        <div class="cc-big-actions">
+          <button type="button" id="communityAddPlaceBtn" class="cc-big-btn">
+            <i class="fa-solid fa-map-pin"></i> Add Tourism Place
+          </button>
+          <button type="button" id="communityReportIssueBtn" class="cc-big-btn cc-big-btn-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i> Report an Issue
+          </button>
+        </div>
+
+        <p id="communitySummary" class="cc-community-summary">Loading community activity...</p>
+
+        <h3>Export Community Data</h3>
+        <p class="cc-small-note">Only non-sensitive, publicly displayed fields are exported - no personal information.</p>
+        <div class="cc-export-grid">
+          <button type="button" id="exportPlacesCSV" class="cc-text-btn"><i class="fa-solid fa-file-csv"></i> Places (CSV)</button>
+          <button type="button" id="exportPlacesGeoJSON" class="cc-text-btn"><i class="fa-solid fa-file-code"></i> Places (GeoJSON)</button>
+          <button type="button" id="exportIssuesCSV" class="cc-text-btn"><i class="fa-solid fa-file-csv"></i> Issues (CSV)</button>
+          <button type="button" id="exportIssuesGeoJSON" class="cc-text-btn"><i class="fa-solid fa-file-code"></i> Issues (GeoJSON)</button>
+        </div>
+
+        <p class="cc-small-note">
+          Community contributions are published immediately - there is no developer
+          approval step. Every contribution is clearly labelled "Community Added" or
+          "Community Updated" with a disclaimer that it has not been independently
+          verified. See the About panel for participation limitations.
+        </p>
+      </section>
+
+      <!-- ===== PLANNING INSIGHTS PANEL ===== -->
+      <section id="panel-planning" class="cc-panel-section" hidden>
+        <h2>Planning Insights</h2>
+
+        <div class="cc-stat-grid">
+          <div class="cc-stat-tile"><span id="statExistingPlaces">0</span><label>Existing (Unedited) Places</label></div>
+          <div class="cc-stat-tile"><span id="statNewPlaces">0</span><label>Newly Added Places</label></div>
+          <div class="cc-stat-tile"><span id="statUpdatedPlaces">0</span><label>Updated Places</label></div>
+          <div class="cc-stat-tile"><span id="statTotalPlaces">0</span><label>Total Current Places</label></div>
+          <div class="cc-stat-tile"><span id="statFeedbackCount">0</span><label>Community Feedback</label></div>
+          <div class="cc-stat-tile cc-stat-tile-warning"><span id="statHighSeverity">0</span><label>High/Critical Problems</label></div>
+        </div>
+
+        <h3>Charts</h3>
+        <div class="cc-chart-box"><canvas id="chartCategory"></canvas></div>
+        <div class="cc-chart-box"><canvas id="chartPlaceStatus"></canvas></div>
+        <div class="cc-chart-box"><canvas id="chartIssuesSeverity"></canvas></div>
+        <div class="cc-chart-box"><canvas id="chartRatings"></canvas></div>
+
+        <h3>Heatmaps</h3>
+        <p class="cc-small-note">Heatmaps show concentration only - they are not exact boundaries or official planning zones.</p>
+        <label class="cc-layer-row"><input type="checkbox" id="heatToggleTourism"> Tourism Activity Concentration</label>
+        <label class="cc-layer-row"><input type="checkbox" id="heatToggleCommunity"> Newly Added / Updated Places</label>
+        <label class="cc-layer-row"><input type="checkbox" id="heatToggleProblems"> Reported Problem Concentration</label>
+        <label class="cc-layer-row"><input type="checkbox" id="heatToggleParticipation"> Community Participation Concentration</label>
+
+        <h3>Community-Based Planning Priority</h3>
+        <p class="cc-small-note">An exploratory student indicator built from reported-issue severity and count - not an official planning prioritisation model.</p>
+        <button type="button" id="priorityMapToggle" class="cc-text-btn">Show Priority Areas on Map</button>
+        <div id="priorityAreasList" class="cc-priority-list"></div>
+
+        <h3>Tourism Service Gap Interpretation</h3>
+        <div id="serviceGapInsights"></div>
+      </section>
+
+      <!-- ===== ABOUT PANEL ===== -->
+      <section id="panel-about" class="cc-panel-section" hidden>
+        <h2>About CoastConnect</h2>
+
+        <h3>Project</h3>
+        <p>Participatory Web Map for Coastal Tourism Activity Registration and Community
+           Feedback in the Western Region of Sri Lanka.</p>
+
+        <h3>Purpose</h3>
+        <p>To integrate existing tourism GIS information with voluntary community
+           contributions, in order to identify tourism resources, visitor experiences,
+           accessibility constraints, service gaps, environmental concerns and potential
+           tourism development opportunities for urban and regional planning.</p>
+
+        <h3>Explore and Filter</h3>
+        <p>Filter by Category allows users to control which tourism datasets are
+           displayed on the map. Multiple categories can be selected together, making
+           it useful for comparing the spatial distribution of different tourism
+           activities and services.</p>
+        <p>Quick Discovery provides a faster way to explore a specific tourism activity
+           or service. Selecting a Quick Discovery option immediately focuses the map
+           experience on that category, helping visitors quickly find relevant places.</p>
+        <p>Both tools respond to the current map view, so tourism locations are
+           displayed progressively as users zoom into and explore different parts of
+           the Western Region.</p>
+
+        <h3>Data Types</h3>
+        <ol>
+          <li>Existing GIS Data - original attributes, never edited</li>
+          <li>Newly Added Places - created entirely through this web map</li>
+          <li>Updated Places - an existing or community place whose information was
+              later edited through this web map</li>
+          <li>Community Feedback</li>
+          <li>Community-Reported Issues</li>
+          <li>Derived Planning Information</li>
+        </ol>
+
+        <h3>Disclaimer</h3>
+        <p>Community-contributed information represents voluntary observations and may
+           not have been independently verified. It is published immediately, with no
+           administrator approval step, and is always labelled as community information.</p>
+
+        <h3>Participation Limitations</h3>
+        <p>Like any Volunteered Geographic Information (VGI) system, this project can be
+           affected by: participation bias (not everyone contributes equally), the digital
+           divide (not everyone has internet/smartphone access), uneven spatial
+           participation (some areas get more reports than others), possible duplicate
+           submissions, incorrect or malicious community information, subjective personal
+           ratings, and the fact that open anonymous contribution has no admin moderation
+           step to catch problems before they appear on the map.</p>
+      </section>
+    </aside>
+
+    <!-- ================= MAP ================= -->
+    <main class="cc-map-wrap">
+      <div id="map"></div>
+
+      <!-- Picking banner shown during Add Place / Edit (Change Location) / Report Issue -->
+      <div id="pickingBanner" class="cc-picking-banner" hidden>
+        <i class="fa-solid fa-hand-pointer"></i>
+        <span class="cc-picking-text">Click the map to locate the tourism place.</span>
+      </div>
+
+      <!-- Collapsible legend -->
+      <div id="legendPanel" class="cc-legend-panel cc-legend-collapsed">
+        <h3>Legend</h3>
+        <div id="legendBody"></div>
+      </div>
+
+      <!-- Floating action buttons -->
+      <div class="cc-fab-row">
+        <button type="button" id="fabNearMe" class="cc-fab" title="Near Me"><i class="fa-solid fa-location-crosshairs"></i></button>
+        <button type="button" id="fabReportIssue" class="cc-fab cc-fab-warning" title="Report Issue"><i class="fa-solid fa-triangle-exclamation"></i></button>
+        <button type="button" id="fabAddPlace" class="cc-fab cc-fab-primary" title="Add Place"><i class="fa-solid fa-plus"></i></button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Location confirm dialog (Add Place / Change Location / Report Issue workflows) -->
+  <div id="locationConfirmDialog" class="cc-dialog-overlay" hidden>
+    <div class="cc-dialog">
+      <h3 class="cc-dialog-title">Confirm this location?</h3>
+      <p class="cc-dialog-coords"></p>
+      <div class="cc-dialog-actions">
+        <button type="button" class="cc-dialog-confirm cc-big-btn">Confirm</button>
+        <button type="button" class="cc-dialog-reposition cc-text-btn">Reposition</button>
+        <button type="button" class="cc-dialog-cancel cc-text-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    GENERIC FORM MODAL - the single reusable shell used by:
+      - js/place-form.js   (Add Tourism Place / Edit Information)
+      - js/feedback.js     (Give Feedback)
+      - js/participation.js (Report an Issue)
+    Each of those files only ever fills #appModalBody with its own form
+    HTML and sets #appModalTitle - the overlay, close button and
+    scrolling behaviour are shared, so there is exactly one form shell
+    in this whole project, not three.
+  -->
+  <div id="appModal" class="cc-modal-overlay" hidden>
+    <div class="cc-modal" role="dialog" aria-modal="true" aria-labelledby="appModalTitle">
+      <div class="cc-modal-header">
+        <h3 id="appModalTitle">Form</h3>
+        <button type="button" id="appModalCloseBtn" class="cc-modal-close" aria-label="Close form">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="appModalBody" class="cc-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toastContainer" class="cc-toast-container" aria-live="polite"></div>
+
+  <!-- ================= SCRIPTS ================= -->
+  <!-- Vendor libraries first -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+  <!-- Our own files - config.js and utils.js must load first, ui.js last -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/data-loader.js"></script>
+  <script src="js/layers.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/community-data.js"></script>
+  <script src="js/place-form.js"></script>
+  <script src="js/participation.js"></script>
+  <script src="js/feedback.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
