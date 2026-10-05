@@ -160,7 +160,7 @@ const APP_CONFIG = {
       filterTags: ["shops"], searchable: true, color: "#ea580c" },
 
     // CHANGED (bug fix): was filterTags: ["shopping"] - shared with Shops.
-    { id: "banks_atm", name: "Banks and ATMs", file: "data/data/banks.geojson",
+    { id: "banks_atm", name: "Banks and ATMs", file: "data/banks.geojson",
       geometryType: "point", group: "Tourism Services", icon: "fa-money-bill-wave",
       filterTags: ["banks_atm"], searchable: true, color: "#166534" },
 

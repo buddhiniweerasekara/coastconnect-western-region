@@ -222,6 +222,13 @@ const Feedback = (function () {
         '<div class="cc-form-success"><i class="fa-solid fa-circle-check"></i>' +
         "<p>Thank you for your feedback - it has been recorded.</p></div>";
 
+      if (typeof CommunityData !== "undefined" && CommunityData.refreshFeedback) {
+        await CommunityData.refreshFeedback();
+      }
+      if (typeof UI !== "undefined" && UI.refreshPlanningInsights) {
+        UI.refreshPlanningInsights();
+      }
+
       setTimeout(() => AppModal.close(), 1400);
     } catch (err) {
       console.error("CoastConnect: feedback submission failed.", err);
