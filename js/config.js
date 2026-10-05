@@ -109,7 +109,7 @@ const APP_CONFIG = {
       geometryType: "point", group: "Transport and Accessibility", icon: "fa-city",
       filterTags: ["transport"], searchable: true, color: "#334155" },
 
-    { id: "beaches", name: "Beaches", file: "data/beaches.geojson",
+    { id: "beaches", name: "Beaches", file: "data/beach.geojson",
       geometryType: "point", group: "Tourism Attractions", icon: "fa-umbrella-beach",
       filterTags: ["beaches"], searchable: true, color: "#0284c7" },
 
@@ -121,7 +121,7 @@ const APP_CONFIG = {
     // Heritage Sites, so selecting the Heritage filter also showed
     // Museums. Now its own exclusive tag, per the user's explicit
     // request to keep Heritage Sites and Museums as separate options.
-    { id: "museums", name: "Museums", file: "data/museums.geojson",
+    { id: "museums", name: "Museums", file: "data/museum.geojson",
       geometryType: "point", group: "Tourism Attractions", icon: "fa-building-columns",
       filterTags: ["museums"], searchable: true, color: "#78350f" },
 
@@ -129,7 +129,7 @@ const APP_CONFIG = {
       geometryType: "point", group: "Tourism Attractions", icon: "fa-tree",
       filterTags: ["nature"], searchable: true, color: "#15803d" },
 
-    { id: "viewpoints", name: "Viewpoints", file: "data/viewpoints.geojson",
+    { id: "viewpoints", name: "Viewpoints", file: "data/view_points.geojson",
       geometryType: "point", group: "Tourism Attractions", icon: "fa-binoculars",
       filterTags: ["viewpoints"], searchable: true, color: "#6d28d9" },
 
@@ -140,7 +140,7 @@ const APP_CONFIG = {
     // CHANGED (bug fix): was filterTags: ["beaches", "heritage", "nature"]
     // - the actual root cause of "Other Attractions appears under
     // unrelated filters/Quick Discovery". Now its own exclusive tag.
-    { id: "attractions", name: "Other Attractions", file: "data/attractions.geojson",
+    { id: "attractions", name: "Other Attractions", file: "data/other_attractions.geojson",
       geometryType: "point", group: "Tourism Attractions", icon: "fa-star",
       filterTags: ["attractions"], searchable: true, color: "#b45309" },
 
@@ -148,7 +148,7 @@ const APP_CONFIG = {
       geometryType: "point", group: "Tourism Services", icon: "fa-bed",
       filterTags: ["accommodation"], searchable: true, color: "#7c3aed" },
 
-    { id: "restaurants", name: "Restaurants", file: "data/restaurants.geojson",
+    { id: "restaurants", name: "Restaurants", file: "data/restaurent.geojson",
       geometryType: "point", group: "Tourism Services", icon: "fa-utensils",
       filterTags: ["food"], searchable: true, color: "#dc2626" },
 
@@ -160,7 +160,7 @@ const APP_CONFIG = {
       filterTags: ["shops"], searchable: true, color: "#ea580c" },
 
     // CHANGED (bug fix): was filterTags: ["shopping"] - shared with Shops.
-    { id: "banks_atm", name: "Banks and ATMs", file: "data/banks_atm.geojson",
+    { id: "banks_atm", name: "Banks and ATMs", file: "data/data/banks.geojson",
       geometryType: "point", group: "Tourism Services", icon: "fa-money-bill-wave",
       filterTags: ["banks_atm"], searchable: true, color: "#166534" },
 

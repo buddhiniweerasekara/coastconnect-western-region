@@ -541,6 +541,9 @@ const PlaceForm = (function () {
       if (typeof CommunityData !== "undefined" && CommunityData.refreshCategory) {
         await CommunityData.refreshCategory(activeCategoryId);
       }
+      if (typeof UI !== "undefined" && UI.refreshPlanningInsights) {
+        UI.refreshPlanningInsights();
+      }
 
       setTimeout(() => {
         AppModal.close();

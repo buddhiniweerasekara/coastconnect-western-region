@@ -166,6 +166,19 @@ const CommunityData = (function () {
     }
   }
 
+  async function refreshFeedback() {
+    const apiURL = APP_CONFIG.googleAppsScript.apiURL;
+    if (isPlaceholderValue(apiURL)) return;
+
+    try {
+      const data = await fetchJSON(buildURL(apiURL, "feedback"));
+      if (!data || data.success !== true) throw new Error("Unexpected response shape for action=feedback");
+      feedbackCache = (data.feedback || []).map(normaliseFeedbackRecord).filter(Boolean);
+    } catch (err) {
+      console.warn("CoastConnect: could not refresh feedback after submission.", err.message);
+    }
+  }
+
   function buildURL(apiURL, action, extraParams) {
     const params = new URLSearchParams(Object.assign({ action }, extraParams || {}));
     const separator = apiURL.includes("?") ? "&" : "?";
@@ -491,8 +504,8 @@ const CommunityData = (function () {
     URL.revokeObjectURL(url);
   }
 
-  return {
-    loadAll, refreshCategory, refreshIssues,
+    return {
+    loadAll, refreshCategory, refreshIssues, refreshFeedback,
     getCurrentCategoryRecords, getAllCurrentRecords, getIssues, getFeedback,
     exportPlacesAsCSV, exportPlacesAsGeoJSON, exportIssuesAsCSV, exportIssuesAsGeoJSON
   };

@@ -720,6 +720,23 @@ const UI = (function () {
     if (el) el.textContent = value;
   }
 
+
+    // Add/Edit Place, Report an Issue, හෝ Give Feedback submit කළාට පස්සේ
+  // call කරන function එක - Planning Insights panel එක page reload
+  // කරන්නේ නැතුව fresh data එකෙන් update කරගන්නවා. Cache කරගෙන හිටපු
+  // (stale) heatmap layers ටිකත් මකලා, checkbox ටික uncheck කරනවා, ඊළඟ
+  // වතාවේ user කෙනෙක් toggle කරනකොට අලුතින් build වෙනවා.
+  function refreshPlanningInsights() {
+    if (heatmapLayers) {
+      const map = MapCore.getMap();
+      Object.values(heatmapLayers).forEach((layer) => { if (map && map.hasLayer(layer)) map.removeLayer(layer); });
+      heatmapLayers = null;
+      document.querySelectorAll('#panel-planning input[type="checkbox"]').forEach((cb) => { cb.checked = false; });
+    }
+    renderCommunitySummary();
+    renderPlanningInsights();
+  }
+
   function wireHeatmapToggles() {
     const map = MapCore.getMap();
     const toggles = {
@@ -867,7 +884,7 @@ const UI = (function () {
 
   return {
     showToast, showTab, setPickingBannerVisible, showLocationConfirmDialog,
-    boot
+    refreshPlanningInsights, boot
   };
 })();
 

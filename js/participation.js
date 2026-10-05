@@ -336,6 +336,9 @@ const Participation = (function () {
       if (typeof CommunityData !== "undefined" && CommunityData.refreshIssues) {
         await CommunityData.refreshIssues();
       }
+      if (typeof UI !== "undefined" && UI.refreshPlanningInsights) {
+        UI.refreshPlanningInsights();
+      }
 
       setTimeout(() => {
         AppModal.close();
